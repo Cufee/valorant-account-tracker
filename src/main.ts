@@ -10,6 +10,7 @@ import {
 } from "./core/api/remote/types.d.ts";
 import { getLastPlayerRank } from "./logic/ranks.ts";
 import Database from "./core/database/local.ts";
+import { Account } from "./core/types/account.d.ts";
 
 const tokens = await getAccessTokens();
 const credentials: RemoteCredentials = {

@@ -1,6 +1,6 @@
 {
     "tasks": {
-        "run": "deno run -A --unstable --cert riot.pem src/main.ts",
-        "dev": "deno run -A --unstable --watch --cert riot.pem src/main.ts"
+        "run": "deno run -A --unstable --cert data/riot.pem src/main.ts",
+        "dev": "deno run -A --unstable --watch --cert data/riot.pem src/main.ts"
     }
 }

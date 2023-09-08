@@ -17,7 +17,7 @@ import { onValorantAccountChange } from "./logic/events/auth.ts";
 const loadCurrentAccountInfo = async () => {
   const tokens = await getAccessTokens();
   if (!tokens.ok) {
-    console.error(tokens.message);
+    console.error("failed to get auth token:", tokens.message);
     return;
   }
 
@@ -29,18 +29,18 @@ const loadCurrentAccountInfo = async () => {
   const db = Database.connect();
   const player = await getPlayerInfo(credentials);
   if (!player.ok) {
-    console.error(player.message);
+    console.error("failed to get current account information:", player.message);
     return;
   }
 
   const gameInfo = await getGameSessionInfo();
   if (!gameInfo.ok) {
-    console.error(gameInfo.message);
+    console.error("failed to get a game session:", gameInfo.message);
     return;
   }
   const versions = await getCurrentVersions();
   if (!versions.ok) {
-    console.error(versions.message);
+    console.error("failed to get available game versions:", versions.message);
     return;
   }
   const remoteOptions: RemoteRequestOptions = {
@@ -56,20 +56,20 @@ const loadCurrentAccountInfo = async () => {
     remoteOptions,
   );
   if (!playerMMR.ok) {
-    console.error(playerMMR.message);
+    console.error("failed to get current player MMR:", playerMMR.message);
     return;
   }
 
   const content = await getGameContent(credentials, remoteOptions);
   if (!content.ok) {
-    console.error(content.message);
+    console.error("failed to get current game content:", content.message);
     return;
   }
   const lastRank = getLastPlayerRank(playerMMR.data, content.data.Seasons);
 
   const compTiers = await getCompetitiveTiers();
   if (!compTiers.ok) {
-    console.error(compTiers.message);
+    console.error("failed to get ranks list:", compTiers.message);
     return;
   }
   const compTierList = compTiers.data.pop();
@@ -89,14 +89,14 @@ const loadCurrentAccountInfo = async () => {
       icon: lastRankDetails?.largeIcon || "",
     },
   };
-  const ok = await db.set("accounts", accountInfo.id, accountInfo);
-  console.debug(ok);
+  await db.set("accounts", accountInfo.id, accountInfo);
 
-  console.debug(await db.get("accounts", accountInfo.id));
+  console.debug(
+    "local account was updated:",
+    await db.get("accounts", accountInfo.id),
+  );
 };
-
-onValorantAccountChange(["test", loadCurrentAccountInfo]);
-
-console.error("Started tracking local accounts");
+onValorantAccountChange(["loadCurrentAccountInfo", loadCurrentAccountInfo]);
 
 loadCurrentAccountInfo();
+console.error("Started tracking local accounts");

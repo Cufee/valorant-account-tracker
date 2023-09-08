@@ -33,7 +33,19 @@ class LocalDB implements Database {
   }
 
   async delete(table: string, key: string): Promise<void> {
-    return this.storage.delete([table, key]);
+    return await this.storage.delete([table, key]);
+  }
+
+  async enqueue(queue: string, payload: unknown): Promise<boolean> {
+    const result = await this.storage.enqueue([queue, payload]);
+    return result.ok;
+  }
+
+  async listenQueue<T>(queue: string, callback: (payload: T) => void) {
+    return await this.storage.listenQueue((message) => {
+      const [name, payload] = message as [string, T];
+      if (name === queue) callback(payload);
+    });
   }
 }
 

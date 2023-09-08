@@ -19,7 +19,7 @@ const getLastPlayerRank = (
   const episodes = seasonsToEpisodes(sortedSeasons);
 
   // If the latest season data exists, use it
-  if (mmrData.LatestCompetitiveUpdate.RankedRatingEarned > 0) {
+  if (mmrData.LatestCompetitiveUpdate.TierAfterUpdate > 0) {
     const episode = episodes.find((e) =>
       e.actIds.includes(mmrData.LatestCompetitiveUpdate.SeasonID)
     );
@@ -33,7 +33,7 @@ const getLastPlayerRank = (
         actId: act?.ID || "",
         act: act?.Name || "Unknown",
       },
-      tier: mmrData.LatestCompetitiveUpdate.RankedRatingEarned,
+      tier: mmrData.LatestCompetitiveUpdate.TierAfterUpdate,
     };
   }
 

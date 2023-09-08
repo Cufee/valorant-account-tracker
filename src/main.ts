@@ -12,48 +12,91 @@ import { getLastPlayerRank } from "./logic/ranks.ts";
 import Database from "./core/database/local.ts";
 import { Account } from "./core/types/account.d.ts";
 
-const tokens = await getAccessTokens();
-const credentials: RemoteCredentials = {
-  token: tokens.accessToken,
-  entitlement: tokens.token,
+import { onValorantAccountChange } from "./logic/events/auth.ts";
+
+const loadCurrentAccountInfo = async () => {
+  const tokens = await getAccessTokens();
+  if (!tokens.ok) {
+    console.error(tokens.message);
+    return;
+  }
+
+  const credentials: RemoteCredentials = {
+    token: tokens.data.accessToken,
+    entitlement: tokens.data.token,
+  };
+
+  const db = Database.connect();
+  const player = await getPlayerInfo(credentials);
+  if (!player.ok) {
+    console.error(player.message);
+    return;
+  }
+
+  const gameInfo = await getGameSessionInfo();
+  if (!gameInfo.ok) {
+    console.error(gameInfo.message);
+    return;
+  }
+  const versions = await getCurrentVersions();
+  if (!versions.ok) {
+    console.error(versions.message);
+    return;
+  }
+  const remoteOptions: RemoteRequestOptions = {
+    clientPlatform: gameInfo.data.platform,
+    clientVersion: versions.data.riotClientVersion,
+    region: gameInfo.data.region,
+    shard: gameInfo.data.shard,
+  };
+
+  const playerMMR = await getPlayerMMR(
+    player.data.sub,
+    credentials,
+    remoteOptions,
+  );
+  if (!playerMMR.ok) {
+    console.error(playerMMR.message);
+    return;
+  }
+
+  const content = await getGameContent(credentials, remoteOptions);
+  if (!content.ok) {
+    console.error(content.message);
+    return;
+  }
+  const lastRank = getLastPlayerRank(playerMMR.data, content.data.Seasons);
+
+  const compTiers = await getCompetitiveTiers();
+  if (!compTiers.ok) {
+    console.error(compTiers.message);
+    return;
+  }
+  const compTierList = compTiers.data.pop();
+
+  const lastRankDetails = compTierList?.tiers.find((t) =>
+    t.tier === lastRank.tier
+  );
+  const accountInfo: Account = {
+    id: player.data.sub,
+    username: player.data.username,
+    name: player.data.acct.game_name,
+    tag: player.data.acct.tag_line,
+    lastRank: {
+      tier: lastRank.tier,
+      name: lastRankDetails?.tierName || "Unknown",
+      color: lastRankDetails?.color || "",
+      icon: lastRankDetails?.largeIcon || "",
+    },
+  };
+  const ok = await db.set("accounts", accountInfo.id, accountInfo);
+  console.debug(ok);
+
+  console.debug(await db.get("accounts", accountInfo.id));
 };
 
-const db = Database.connect();
-const player = await getPlayerInfo(credentials);
+onValorantAccountChange(["test", loadCurrentAccountInfo]);
 
-const gameInfo = await getGameSessionInfo();
-const versions = await getCurrentVersions();
-const remoteOptions: RemoteRequestOptions = {
-  clientPlatform: gameInfo.platform,
-  clientVersion: versions.riotClientVersion,
-  region: gameInfo.region,
-  shard: gameInfo.shard,
-};
+console.error("Started tracking local accounts");
 
-const playerData = await getPlayerMMR(player.sub, credentials, remoteOptions);
-
-const content = await getGameContent(credentials, remoteOptions);
-const lastRank = getLastPlayerRank(playerData, content.Seasons);
-
-const compTiers = await getCompetitiveTiers();
-const compTierList = compTiers.pop();
-
-const lastRankDetails = compTierList?.tiers.find((t) =>
-  t.tier === lastRank.tier
-);
-const accountInfo: Account = {
-  id: player.sub,
-  username: player.username,
-  name: player.acct.game_name,
-  tag: player.acct.tag_line,
-  lastRank: {
-    tier: lastRank.tier,
-    name: lastRankDetails?.tierName || "Unknown",
-    color: lastRankDetails?.color || "",
-    icon: lastRankDetails?.largeIcon || "",
-  },
-};
-const ok = await db.set("accounts", accountInfo.id, accountInfo);
-console.log(ok);
-
-console.log(await db.get("accounts", accountInfo.id));
+loadCurrentAccountInfo();

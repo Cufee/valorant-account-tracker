@@ -1,3 +1,6 @@
+import { Result } from "../../types/result.d.ts";
+import { tryCatch } from "../../utils/tryCatch.ts";
+
 type Versions = {
   manifestId: string;
   branch: string;
@@ -9,10 +12,15 @@ type Versions = {
   buildDate: string;
 };
 
-const getCurrentVersions = async (): Promise<Versions> => {
-  const response = await fetch("https://valorant-api.com/v1/version");
-  const raw = await response.json();
-  return raw.data;
+const getCurrentVersions = (): Promise<Result<Versions>> => {
+  return tryCatch(async () => {
+    const response = await fetch("https://valorant-api.com/v1/version");
+    const raw = await response.json();
+    return {
+      ok: true,
+      data: raw.data,
+    };
+  }, "failed to get current version from remote api");
 };
 
 export { getCurrentVersions };

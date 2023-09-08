@@ -3,31 +3,22 @@ import { getGameCredentials } from "./credentials.ts";
 // from looking into this, seems like there is a check on message length when an event type is error
 import Socket from "npm:ws";
 
-const events = [
-  //   "OnClientFlash",
-  //   "OnClientFocus",
-  //   "OnClientMinimize",
-  "OnJsonApiEvent_agent_v1_requests",
-  "OnJsonApiEvent_agent_v1_session",
-  //   "OnJsonApiEvent_chat_v4_friends",
-  //   "OnJsonApiEvent_chat_v4_presences",
-  //   "OnJsonApiEvent_chat_v5_messages",
-  //   "OnJsonApiEvent_chat_v6_conversations",
-  //   "OnJsonApiEvent_chat_v6_friendrequests",
-  "OnJsonApiEvent_player-account_aliases_v1",
-  "OnJsonApiEvent_riot-messaging-service_v1_session",
-  "OnJsonApiEvent_riot-messaging-service_v1_state",
-  "OnJsonApiEvent_riot-messaging-service_v1_user",
-];
+type GameEvent<T> = {
+  data: T;
+  eventType: string;
+  uri: string;
+};
 
-type ValorantData<T> = [number, string, Record<string, T>];
+type ValorantData<T> = [number, string, GameEvent<T>];
 
-const newSocketConnection = (
+const newSocketConnection = async (
+  events: string[],
   callback?: (name: string, data: unknown) => void,
 ) => {
-  const { wss } = getGameCredentials();
+  const credentials = await getGameCredentials();
+  if (!credentials.ok) return credentials;
 
-  const connection: WebSocket = new Socket(wss.endpoint);
+  const connection: WebSocket = new Socket(credentials.data.wss.endpoint);
   connection.onopen = () => {
     console.log("WSS connection open");
 
@@ -48,19 +39,13 @@ const newSocketConnection = (
       const [_, eventName, payload] = JSON.parse(event.data) as ValorantData<
         unknown
       >;
-      console.log(eventName, payload);
-
-      Deno.writeTextFileSync(
-        "log.txt",
-        "\n" + JSON.stringify({ [eventName]: payload }, null, 2),
-        { append: true },
-      );
-
       if (callback) callback(eventName, payload);
     } catch (error) {
       console.error("failed to parse event:", error, event.data);
     }
   };
+
+  return () => connection.close();
 };
 
 export { newSocketConnection };

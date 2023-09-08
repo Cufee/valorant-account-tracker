@@ -1,17 +1,5 @@
-import { join } from "https://deno.land/std@0.201.0/path/join.ts";
-import { getGameCredentials } from "./credentials.ts";
-
-const sendGameRequest = async (path: string) => {
-  const { http } = getGameCredentials();
-
-  const response = await fetch(join(http.endpoint, path), {
-    headers: {
-      "Authorization": http.authHeader,
-    },
-  });
-
-  return response.json();
-};
+import { Result } from "../../types/result.d.ts";
+import sendRequest from "./client.ts";
 
 type LocalHelpResponse = {
   events: {
@@ -25,8 +13,8 @@ type LocalHelpResponse = {
   };
 };
 
-const sendHelpRequest = async (): Promise<LocalHelpResponse> => {
-  return await sendGameRequest("/help");
+const sendHelpRequest = async (): Promise<Result<LocalHelpResponse>> => {
+  return await sendRequest("/help");
 };
 
 type EntitlementsTokenResponse = {
@@ -40,8 +28,10 @@ type EntitlementsTokenResponse = {
   token: string;
 };
 
-const getAccessTokens = async (): Promise<EntitlementsTokenResponse> => {
-  return await sendGameRequest("/entitlements/v1/token");
+const getAccessTokens = async (): Promise<
+  Result<EntitlementsTokenResponse>
+> => {
+  return await sendRequest("/entitlements/v1/token");
 };
 
 type ClientRegionResponse = {
@@ -52,9 +42,9 @@ type ClientRegionResponse = {
 };
 
 const getClientRegion = async (): Promise<
-  ClientRegionResponse
+  Result<ClientRegionResponse>
 > => {
-  return await sendGameRequest("/riotclient/region-locale");
+  return await sendRequest("/riotclient/region-locale");
 };
 
-export { getAccessTokens, getClientRegion, sendGameRequest, sendHelpRequest };
+export { getAccessTokens, getClientRegion, sendHelpRequest };

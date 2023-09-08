@@ -1,5 +1,8 @@
 import { encode } from "https://deno.land/std@0.194.0/encoding/base64.ts";
-import { getClientRegion, sendGameRequest } from "./game.ts";
+
+import { Result } from "../../types/result.d.ts";
+import sendRequest from "./client.ts";
+import { getClientRegion } from "./game.ts";
 
 const clientPlatform = {
   "platformType": "PC",
@@ -30,8 +33,8 @@ type SessionsResponse = {
   };
 };
 
-const sendSessionsRequest = async (): Promise<SessionsResponse> => {
-  return await sendGameRequest("/product-session/v1/external-sessions");
+const sendSessionsRequest = async (): Promise<Result<SessionsResponse>> => {
+  return await sendRequest("/product-session/v1/external-sessions");
 };
 
 type ClientInfo = {
@@ -41,25 +44,32 @@ type ClientInfo = {
   shard: string;
 };
 
-const getGameSessionInfo = async (): Promise<ClientInfo> => {
+const getGameSessionInfo = async (): Promise<Result<ClientInfo>> => {
   const region = await getClientRegion();
+  if (!region.ok) return region;
 
   // Find the first session that is not Riot Client
   const sessions = await sendSessionsRequest();
-  const gameSession = Object.entries(sessions).find(([name, _]) =>
+  if (!sessions.ok) return sessions;
+
+  const gameSession = Object.entries(sessions.data).find(([name, _]) =>
     name !== "host_app"
   )?.[1];
-  if (!gameSession) {
-    console.log("no game session found");
-    Deno.exit(1);
+  if (!gameSession?.launchConfiguration) {
+    return {
+      ok: false,
+      message: "no game session found",
+    };
   }
 
   const endpointConfig = gameSession.launchConfiguration.arguments.find((
     a,
   ) => a.includes("-config-endpoint="));
   if (!endpointConfig) {
-    console.log("no endpoint");
-    Deno.exit(1);
+    return {
+      ok: false,
+      message: "game session has no endpoint",
+    };
   }
   // https://shared.na.a.pvp.net
   const [_, shard] = endpointConfig.replace("-config-endpoint=", "").split(
@@ -67,10 +77,13 @@ const getGameSessionInfo = async (): Promise<ClientInfo> => {
     4,
   );
   return {
-    platform: clientPlatformEncoded,
-    version: gameSession.version,
-    region: region.region,
-    shard,
+    ok: true,
+    data: {
+      platform: clientPlatformEncoded,
+      version: gameSession.version,
+      region: region.data.region,
+      shard,
+    },
   };
 };
 

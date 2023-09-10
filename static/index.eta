@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.9.5"
+    integrity="sha384-xcuj3WpfgjlKF+FXhSQFQ0ZNr39ln+hwjN3npfM9VBnUskLolQAcN80McRIVOPuO"
+    crossorigin="anonymous"></script>
+  <!-- DaisyUI -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@3.7.3/dist/full.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <title>Account Tracker</title>
+</head>
+
+<body class="max-w-5xl m-auto p-4">
+  <div class="flex justify-center">
+    <button class="btn btn-neutral" hx-post="/" hx-target="#app">Refresh</button>
+  </div>
+  <div id="app">
+    <%~ include("./app.eta", { accounts: it.accounts } ) %>
+  </div>
+</body>
+
+</html>

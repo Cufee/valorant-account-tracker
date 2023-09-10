@@ -20,14 +20,14 @@ const newSocketConnection = async (
 
   const connection: WebSocket = new Socket(credentials.data.wss.endpoint);
   connection.onopen = () => {
-    console.log("WSS connection open");
+    console.error("WSS connection open");
 
     events.forEach((event) => {
       connection.send(JSON.stringify([5, event]));
     });
   };
   connection.onclose = (event) => {
-    console.log("WSS connection closed", JSON.stringify(event));
+    console.error("WSS connection closed", JSON.stringify(event));
   };
   connection.onerror = (event) => {
     console.error("error:", JSON.stringify(event));

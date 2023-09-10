@@ -1,6 +1,8 @@
+# You will need to init Deno workspace configuration after clone
 .vscode
 
+# Default database location, any temporary/runtime files will also be saved here
 data/*
-!data/riot.pem
 
+# Executables compiled for current OS
 build/*

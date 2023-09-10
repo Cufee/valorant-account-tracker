@@ -1,0 +1,26 @@
+<table class="table table-zebra">
+  <thead>
+    <tr>
+      <th class="w-24"></th>
+      <th>TAG</th>
+      <th>USERNAME</th>
+    </tr>
+  </thead>
+  <tbody class="text-xl">
+    <% it.accounts.forEach(function(account){ %>
+      <tr>
+        <td class="flex justify-center"><img src="<%= account.lastRank.icon %>" class="w-12 h-12" /></td>
+        <td class="text-bold">
+          <span>
+            <%= account.name %>#<%= account.tag %>
+          </span>
+        </td>
+        <td>
+          <span>
+            <%= account.username %>
+          </span>
+        </td>
+      </tr>
+      <% }) %>
+  </tbody>
+</table>

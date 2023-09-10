@@ -1,7 +1,6 @@
 {
     "tasks": {
-        "build": "rm -rf build && deno compile --allow-read --allow-write --allow-net --allow-env --unstable --cert static/riot.pem --output build/valorantAccountTracker src/main.ts && cp -r static build/static",
-        "run": "deno run --allow-read --allow-write --allow-net --allow-env --unstable --cert static/riot.pem src/main.ts",
+        "start": "deno run --allow-read --allow-write --allow-net --allow-env --unstable --cert static/riot.pem src/main.ts",
         "dev": "deno run -A --unstable --watch=src/,static/ --cert static/riot.pem src/main.ts"
     }
 }
